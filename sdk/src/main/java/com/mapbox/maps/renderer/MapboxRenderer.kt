@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
-internal abstract class MapboxRenderer : MapClient {
+internal abstract class MapboxRenderer : MapboxRendererInterface, MapClient {
 
   @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
   internal lateinit var renderThread: MapboxRenderThread
@@ -48,7 +48,7 @@ internal abstract class MapboxRenderer : MapClient {
   }
 
   @UiThread
-  fun onDestroy() {
+  override fun onDestroy() {
     renderThread.destroy()
     renderThread.fpsChangedListener = null
   }
@@ -126,20 +126,20 @@ internal abstract class MapboxRenderer : MapClient {
   }
 
   @UiThread
-  fun onStop() {
+  override fun onStop() {
     renderThread.pause()
     map?.unsubscribe(observer)
     readyForSnapshot.set(false)
   }
 
   @UiThread
-  fun onStart() {
+  override fun onStart() {
     renderThread.resume()
     map?.subscribe(observer, listOf(MapEvents.RENDER_FRAME_FINISHED))
   }
 
   @WorkerThread
-  fun snapshot(): Bitmap? {
+  override fun snapshot(): Bitmap? {
     if (!readyForSnapshot.get()) {
       Logger.e(TAG, "Could not take map snapshot because map is not ready yet.")
       return null
@@ -166,7 +166,7 @@ internal abstract class MapboxRenderer : MapClient {
   }
 
   @AnyThread
-  fun snapshot(listener: OnSnapshotReady) {
+  override fun snapshot(listener: OnSnapshotReady) {
     if (!readyForSnapshot.get()) {
       Logger.e(TAG, "Could not take map snapshot because map is not ready yet.")
       listener.onSnapshotReady(null)
@@ -181,13 +181,13 @@ internal abstract class MapboxRenderer : MapClient {
   }
 
   @AnyThread
-  fun setMaximumFps(fps: Int) {
+  override fun setMaximumFps(fps: Int) {
     renderThread.setMaximumFps(fps)
   }
 
   @AnyThread
   @Synchronized
-  fun setOnFpsChangedListener(listener: OnFpsChangedListener) {
+  override fun setOnFpsChangedListener(listener: OnFpsChangedListener) {
     renderThread.fpsChangedListener = listener
   }
 
