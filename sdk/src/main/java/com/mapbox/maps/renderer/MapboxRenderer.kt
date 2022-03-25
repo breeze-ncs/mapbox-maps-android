@@ -76,7 +76,7 @@ internal abstract class MapboxRenderer : MapboxRendererInterface, MapClient {
   }
 
   @AnyThread
-  fun queueRenderEvent(runnable: Runnable) {
+  override fun queueRenderEvent(runnable: Runnable) {
     renderThread.queueRenderEvent(
       RenderEvent(
         runnable = runnable,
@@ -87,7 +87,7 @@ internal abstract class MapboxRenderer : MapboxRendererInterface, MapClient {
   }
 
   @AnyThread
-  fun queueEvent(runnable: Runnable) {
+  override fun queueEvent(runnable: Runnable) {
     renderThread.queueRenderEvent(
       RenderEvent(
         runnable = runnable,

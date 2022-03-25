@@ -66,12 +66,9 @@ internal class MapController : MapPluginProviderDelegate, MapControllable {
     AssetManagerProvider().initialize(mapInitOptions.context.assets)
     // create Map in Kotlin if using Android renderer
     if (renderer is MapboxRenderer) {
-      this.nativeMap = NativeMapImpl(
-        Map(
-          renderer,
-          mapInitOptions.mapOptions,
-          mapInitOptions.resourceOptions
-        )
+      this.nativeMap = MapProvider.getNativeMap(
+        mapInitOptions,
+        renderer
       )
     } else {
       // create Map in C++ if using C++ renderer and return it to Kotlin
@@ -89,14 +86,6 @@ internal class MapController : MapPluginProviderDelegate, MapControllable {
     if (renderer is MapboxRenderer) {
       this.mapboxMap.renderHandler = renderer.renderThread.renderHandlerThread.handler
     }
-    this.nativeMap = MapProvider.getNativeMap(
-      mapInitOptions,
-      renderer,
-    )
-    this.nativeObserver = NativeObserver(nativeMap)
-    this.mapboxMap =
-      MapProvider.getMapboxMap(nativeMap, nativeObserver, mapInitOptions.mapOptions.pixelRatio)
-    this.mapboxMap.renderHandler = renderer.renderThread.renderHandlerThread.handler
     this.pluginRegistry = MapProvider.getMapPluginRegistry(
       mapboxMap,
       this,
@@ -234,10 +223,18 @@ internal class MapController : MapPluginProviderDelegate, MapControllable {
   }
 
   override fun addWidget(widget: Widget) {
-    renderer.renderThread.addWidget(widget)
+    // TODO think about widgets when using C++ renderer
+    if (renderer is MapboxRenderer) {
+      renderer.renderThread.addWidget(widget)
+    }
   }
 
-  override fun removeWidget(widget: Widget) = renderer.renderThread.removeWidget(widget)
+  override fun removeWidget(widget: Widget): Boolean {
+    if (renderer is MapboxRenderer) {
+      return renderer.renderThread.removeWidget(widget)
+    }
+    return false
+  }
 
   //
   // Telemetry
